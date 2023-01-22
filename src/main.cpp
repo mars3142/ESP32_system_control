@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <SPIFFS.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <AsyncElegantOTA.h>
@@ -49,9 +50,13 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  SPIFFS.begin(true);
+
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "Hi! I am ESP32.");
+    request->send(SPIFFS, "/index.html", "text/html", false);
   });
+
+  server.serveStatic("/", SPIFFS, "/");
 
   AsyncElegantOTA.begin(&server);    // Start ElegantOTA
   server.begin();
