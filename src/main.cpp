@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#include <AsyncElegantOTA.h>
 
 #include "rgb.h"
 
@@ -7,6 +10,7 @@
 #define NUMPIXELS  420
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+AsyncWebServer server(80);
 
 const auto pinOutput = 16;
 const auto pinInput = 17;
@@ -19,6 +23,7 @@ unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
 void setup() {
+
   pixels.begin();
   pixels.setBrightness(50); // 255
 
@@ -27,6 +32,36 @@ void setup() {
 
   digitalWrite(pinOutput, HIGH);
   lastDebounceTime = millis();
+
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("SSID", "PASSWORD");
+  Serial.println("");
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println("SSID");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Hi! I am ESP32.");
+  });
+
+  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
+  server.begin();
+  Serial.println("HTTP server started");
+
+  if (!MDNS.begin("eisenbahn")) {
+    Serial.println("Error setting up MDNS responder!");
+    delay(10000);
+    ESP.restart();
+  }  
 }
 
 void loop() {  
