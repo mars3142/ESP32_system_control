@@ -5,6 +5,7 @@
 #include <ESPmDNS.h>
 #include <AsyncElegantOTA.h>
 
+#include "credentials.h"
 #include "rgb.h"
 
 #define PIN        2
@@ -23,7 +24,11 @@ auto lastValue = LOW;
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
+Credentials cred;
+int led = 0;
+
 void setup() {
+  Serial.begin(115200);
 
   pixels.begin();
   pixels.setBrightness(50); // 255
@@ -34,19 +39,38 @@ void setup() {
   digitalWrite(pinOutput, HIGH);
   lastDebounceTime = millis();
 
-  Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("SSID", "PASSWORD");
-  Serial.println("");
+  pinMode(2, OUTPUT);
+  for (auto &c : credentials) {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(c.ssid.c_str(), c.password.c_str());
+    Serial.println("");
+    Serial.print("Trying to connect to ");
+    Serial.println(c.ssid.c_str());
 
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    // Wait for connection
+    unsigned long start = millis();
+    while (millis() - start <= 15000) {
+      if (WiFi.status() == WL_CONNECTED) {
+        break;
+      }
+
+      delay(500);
+      Serial.print(".");
+      led = 1 - led;
+      digitalWrite(2, led);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      cred = c;
+    }
   }
+  if (WiFi.status() != WL_CONNECTED) {
+    ESP.restart();
+  }
+
   Serial.println("");
   Serial.print("Connected to ");
-  Serial.println("SSID");
+  Serial.println(cred.ssid.c_str());
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
