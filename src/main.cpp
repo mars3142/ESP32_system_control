@@ -1,112 +1,68 @@
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
-#include <SPIFFS.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <AsyncElegantOTA.h>
 
-#include "credentials.h"
+#include <esp32-hal-log.h>
+#include <AccelStepper.h>
+
+#include "connectivity.h"
 #include "rgb.h"
+#include "server.h"
+#include "wled.h"
 
-#define PIN        2
-#define NUMPIXELS  420
+// Motor Driver
+#define stepPin 25
+#define dirPin 26
 
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-AsyncWebServer server(80);
+AccelStepper stepper(AccelStepper::FULL2WIRE, stepPin, dirPin);
 
-const auto pinOutput = 16;
-const auto pinInput = 17;
-const auto dayColor = pixels.Color(255, 255, 255);
-const auto nightColor = pixels.Color(0, 0, 255);
-
-auto color = dayColor;
-auto lastValue = LOW;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
-
-Credentials cred;
-int led = 0;
-
-void setup() {
+void setup()
+{
   Serial.begin(115200);
 
-  pixels.begin();
-  pixels.setBrightness(50); // 255
+  log_d("Total heap: %d", ESP.getHeapSize());
+  log_d("Free heap: %d", ESP.getFreeHeap());
 
-  pinMode(pinOutput, OUTPUT);
-  pinMode(pinInput, INPUT_PULLDOWN);
-
-  digitalWrite(pinOutput, HIGH);
-  lastDebounceTime = millis();
-
-  pinMode(2, OUTPUT);
-  for (auto &c : credentials) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(c.ssid.c_str(), c.password.c_str());
-    Serial.println("");
-    Serial.print("Trying to connect to ");
-    Serial.println(c.ssid.c_str());
-
-    // Wait for connection
-    unsigned long start = millis();
-    while (millis() - start <= 15000) {
-      if (WiFi.status() == WL_CONNECTED) {
-        break;
-      }
-
-      delay(500);
-      Serial.print(".");
-      led = 1 - led;
-      digitalWrite(2, led);
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-      cred = c;
-    }
-  }
-  if (WiFi.status() != WL_CONNECTED) {
-    ESP.restart();
+  if (psramInit())
+  {
+    log_d("Total PSRAM: %d", ESP.getPsramSize());
+    log_d("Free PSRAM: %d", ESP.getFreePsram());
   }
 
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(cred.ssid.c_str());
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  xTaskCreatePinnedToCore(
+      init_wifi_task, /* Task function. */
+      "WiFi",         /* String with name of task. */
+      10000,          /* Stack size in bytes. */
+      NULL,           /* Parameter passed as input of the task */
+      1,              /* Priority of the task. */
+      NULL,           /* Task handle. */
+      APP_CPU_NUM     /* CPU Core */
+  );
 
-  SPIFFS.begin(true);
+  xTaskCreate(
+      init_server_task, /* Task function. */
+      "Server",         /* String with name of task. */
+      10000,            /* Stack size in bytes. */
+      NULL,             /* Parameter passed as input of the task */
+      1,                /* Priority of the task. */
+      NULL              /* Task handle. */
+  );
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", "text/html", false);
-  });
+  xTaskCreatePinnedToCore(
+      show_wled_task, /* Task function. */
+      "WLED",         /* String with name of task. */
+      10000,          /* Stack size in bytes. */
+      NULL,           /* Parameter passed as input of the task */
+      1,              /* Priority of the task. */
+      NULL,           /* Task handle. */
+      APP_CPU_NUM     /* CPU Core */
+  );
 
-  server.serveStatic("/", SPIFFS, "/");
-
-  AsyncElegantOTA.begin(&server);    // Start ElegantOTA
-  server.begin();
-  Serial.println("HTTP server started");
-
-  if (!MDNS.begin("eisenbahn")) {
-    Serial.println("Error setting up MDNS responder!");
-    delay(10000);
-    ESP.restart();
-  }  
+  stepper.setMaxSpeed(1000);
+  stepper.setAcceleration(50);
+  stepper.setSpeed(200);
+  stepper.moveTo(200);
 }
 
-void loop() {  
-  auto reading = digitalRead(pinInput);
-  
-  if (reading != lastValue) {
-    lastDebounceTime = millis();
-  }
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-      if (reading != lastValue) {
-        lastValue = reading;
-      }
-  }
-
-  pixels.clear();
-  pixels.fill((reading == LOW) ? dayColor : nightColor, 0, NUMPIXELS);
-  pixels.show();
+void loop()
+{
+  /// nothing to do here
 }
