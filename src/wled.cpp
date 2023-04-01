@@ -4,6 +4,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #include "connectivity.h"
+#include "state.h"
 
 // WLED
 #define PIN 15
@@ -11,23 +12,39 @@
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-const auto pinOutput = 16;
-const auto pinInput = 4;
-const auto dayColor = pixels.Color(127, 127, 127);
-const auto nightColor = pixels.Color(0, 0, 255);
+const auto pin_output = 16;
+const auto pin_input = 4;
+const auto bounce_color = pixels.Color(255, 0, 0);
 
-auto color = dayColor;
-auto lastValue = LOW;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
+auto last_value = LOW;
+unsigned long last_debounce_time = 0;
+unsigned long debounce_delay = 50;
+
+void bounce_wled()
+{
+    for (int i = 0; i < 8; i++)
+    {
+        pixels.clear();
+        pixels.setPixelColor(i, bounce_color);
+        pixels.show();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    for (int i = 0; i < 8; i++)
+    {
+        pixels.clear();
+        pixels.setPixelColor(7 - i, bounce_color);
+        pixels.show();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
 
 void show_wled_task(void *params)
 {
-    pinMode(pinOutput, OUTPUT);
-    pinMode(pinInput, INPUT_PULLDOWN);
+    pinMode(pin_output, OUTPUT);
+    pinMode(pin_input, INPUT_PULLDOWN);
 
-    digitalWrite(pinOutput, HIGH);
-    lastDebounceTime = millis();
+    digitalWrite(pin_output, HIGH);
+    last_debounce_time = millis();
 
     pixels.begin();
     pixels.setBrightness(50); // 255
@@ -36,37 +53,28 @@ void show_wled_task(void *params)
     {
         if (!connection_ready)
         {
-            for (int i = 0; i < 8; i++)
-            {
-                if (connection_ready)
-                {
-                    break;
-                }
-                pixels.clear();
-                pixels.setPixelColor(i, pixels.Color(255, 0, 0));
-                pixels.show();
-                vTaskDelay(100 / portTICK_PERIOD_MS);
-            }
+            bounce_wled();
         }
         else
         {
-            auto reading = digitalRead(pinInput);
+            auto reading = digitalRead(pin_input);
 
-            if (reading != lastValue)
+            if (reading != last_value)
             {
-                lastDebounceTime = millis();
+                last_debounce_time = millis();
             }
 
-            if ((millis() - lastDebounceTime) > debounceDelay)
+            if ((millis() - last_debounce_time) > debounce_delay)
             {
-                if (reading != lastValue)
+                if (reading != last_value)
                 {
-                    lastValue = reading;
+                    last_value = reading;
                 }
             }
 
             pixels.clear();
-            pixels.fill((reading == LOW) ? dayColor : nightColor, 0, NUMPIXELS);
+            pixels.setBrightness(get_brightness(reading));
+            pixels.fill(get_color(reading), 0, NUMPIXELS);
             pixels.show();
         }
     }

@@ -126,7 +126,6 @@ const char index_html[] PROGMEM = R"(
         </section>
 
         <script>
-        const apiUrl = "http://eisenbahn.local";
         let dnState = "";
 
         const webSocket = new WebSocket("ws://eisenbahn.local/state");
@@ -137,6 +136,19 @@ const char index_html[] PROGMEM = R"(
 
         webSocket.onmessage = (event) => {
             console.log("Message from server: ", event.data);
+            const response =
+                event.data ||
+                `{"state":"day", "colorDay":"#000000", "brightnessDay":255, "colorNight":"#000000", "brightnessNight":0}`;
+            try {
+                const data = JSON.parse(response);
+                setVal("colorDay", data.colorDay);
+                setVal("brightnessDay", data.brightnessDay);
+                setVal("colorNight", data.colorNight);
+                setVal("brightnessNight", data.brightnessNight);
+                setDN(data.state);
+            } catch (e) {
+                console.error(e);
+            }
         };
 
         function getVal(id) {
@@ -164,62 +176,18 @@ const char index_html[] PROGMEM = R"(
             find("day").classList.add("is-warning");
         }
 
-        function mkRequest(method, url, data, callback) {
-            console.log(method, url, data);
-            find("submit").classList.add("is-loading");
-            const r = new XMLHttpRequest();
-            r.open(method, url, true);
-            r.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            r.onreadystatechange = function () {
-            find("submit").classList.remove("is-loading");
-            if (r.readyState != 4 || r.status != 200) {
-                return;
-            }
-            find("submit").classList.remove("is-loading");
-            callback(r);
-            };
-            r.send(data || "");
-        }
-
-        function loadData() {
-            mkRequest("GET", `${apiUrl}/status`, "", (r) => {
-            const response =
-                r.responseText ||
-                `{"state":"day", "colorDay":"#000000", "brightnessDay":255, "colorNight":"#000000", "brightnessNight":0}`;
-            try {
-                const data = JSON.parse(response);
-                setVal("colorDay", data.colorDay);
-                setVal("brightnessDay", data.brightnessDay);
-                setVal("colorNight", data.colorNight);
-                setVal("brightnessNight", data.brightnessNight);
-                setDN(data.state);
-            } catch (e) {
-                console.error(e);
-            }
-            });
-        }
-
         function sendData() {
             const data = `colorDay=${getVal("colorDay")}&brightnessDay=${getVal(
             "brightnessDay"
             )}&colorNight=${getVal("colorNight")}&brightnessNight=${getVal(
             "brightnessNight"
             )}`;
-
-            mkRequest("POST", `${apiUrl}/config`, data, (r) => {
-            loadData();
-            });
+            webSocket.send(data);
         }
 
         function sendDNState(state) {
-            const data = `state=${state}`;
-            mkRequest("POST", `${apiUrl}/state`, data, (r) => {
-            loadData();
-            });
+            wevSocket.send(state);
         }
-
-        // init load
-        loadData();
         </script>
     </body>
     </html>

@@ -9,10 +9,10 @@
 #include "wled.h"
 
 // Motor Driver
-#define stepPin 25
-#define dirPin 26
+#define step_pin 25
+#define dir_pin 26
 
-AccelStepper stepper(AccelStepper::FULL2WIRE, stepPin, dirPin);
+AccelStepper stepper(AccelStepper::FULL2WIRE, step_pin, dir_pin);
 
 void setup()
 {

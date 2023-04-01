@@ -18,9 +18,6 @@ void init_server_task(void *param)
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "text/html", index_html); });
 
-    server.on("/status", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(200, "application/json", "{\"state\":\"night\", \"colorDay\":\"#00FF00\", \"brightnessDay\":10, \"colorNight\":\"#0000FF\", \"brightnessNight\":50, \"duration\":60}"); });
-
     server.on("/state", HTTP_POST, [](AsyncWebServerRequest *request)
               {
     // change day/night cycle
@@ -48,7 +45,7 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
     {
     case WS_EVT_CONNECT:
         log_d("ws[%s][%u] connect", server->url(), client->id());
-        server->text(client->id(), get_state());
+        server->text(client->id(), get_values());
         break;
 
     case WS_EVT_DISCONNECT:
@@ -57,6 +54,7 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
 
     case WS_EVT_DATA:
         server->textAll(String(len) + " bytes received");
+        server->textAll(get_values());
         break;
 
     case WS_EVT_PONG:
