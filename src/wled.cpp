@@ -8,7 +8,7 @@
 
 // WLED
 #define PIN 15
-#define NUMPIXELS 420
+#define NUMPIXELS 64 // 420
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -22,17 +22,21 @@ unsigned long debounce_delay = 50;
 
 void bounce_wled()
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < (NUMPIXELS); i++)
     {
+        if (connection_ready)
+            return;
         pixels.clear();
         pixels.setPixelColor(i, bounce_color);
         pixels.show();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < (NUMPIXELS); i++)
     {
+        if (connection_ready)
+            return;
         pixels.clear();
-        pixels.setPixelColor(7 - i, bounce_color);
+        pixels.setPixelColor((NUMPIXELS - 1) - i, bounce_color);
         pixels.show();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
@@ -72,9 +76,10 @@ void show_wled_task(void *params)
                 }
             }
 
+            auto color = get_color(reading);
             pixels.clear();
             pixels.setBrightness(get_brightness(reading));
-            pixels.fill(get_color(reading), 0, NUMPIXELS);
+            pixels.fill(color, 0, NUMPIXELS);
             pixels.show();
         }
     }

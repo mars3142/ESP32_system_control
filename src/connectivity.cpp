@@ -15,11 +15,16 @@ void init_wifi_task(void *params)
     log_d("Starting init wifi task");
 
     WiFi.disconnect();
+    WiFi.mode(WIFI_STA);
     if (WiFi.status() != WL_CONNECTED)
     {
         for (auto &credential : credentials)
         {
-            WiFi.mode(WIFI_STA);
+            if (connection_ready)
+            {
+                break;
+            }
+
             WiFi.begin(credential.ssid.c_str(), credential.password.c_str());
             log_d("Trying to connect to %s", credential.ssid.c_str());
 
@@ -29,6 +34,7 @@ void init_wifi_task(void *params)
             {
                 if (WiFi.status() == WL_CONNECTED)
                 {
+                    connection_ready = true;
                     break;
                 }
 
@@ -54,8 +60,6 @@ void init_wifi_task(void *params)
         vTaskDelay(10000 / portTICK_PERIOD_MS);
         ESP.restart();
     }
-
-    connection_ready = true;
 
     log_d("Wifi task init finished");
     vTaskDelete(NULL);

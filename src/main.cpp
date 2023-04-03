@@ -27,14 +27,13 @@ void setup()
     log_d("Free PSRAM: %d", ESP.getFreePsram());
   }
 
-  xTaskCreatePinnedToCore(
+  xTaskCreate(
       init_wifi_task, /* Task function. */
       "WiFi",         /* String with name of task. */
       10000,          /* Stack size in bytes. */
       NULL,           /* Parameter passed as input of the task */
       1,              /* Priority of the task. */
-      NULL,           /* Task handle. */
-      APP_CPU_NUM     /* CPU Core */
+      NULL            /* Task handle. */
   );
 
   xTaskCreate(
