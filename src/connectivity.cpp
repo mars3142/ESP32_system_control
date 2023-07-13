@@ -10,12 +10,31 @@
 bool init_mdns_done = false;
 bool connection_ready = false;
 
+void connected(WiFiEvent_t event, WiFiEventInfo_t info)
+{
+    connection_ready = true;
+
+    if (!init_mdns_done)
+    {
+        init_mdns_done = MDNS.begin("eisenbahn");
+    }
+
+    if (!init_mdns_done)
+    {
+        log_d("Error setting up MDNS responder!");
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        ESP.restart();
+    }
+}
+
 void init_wifi_task(void *params)
 {
     log_d("Starting init wifi task");
 
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
+    WiFi.onEvent(connected, ARDUINO_EVENT_WIFI_STA_GOT_IP);
+
     if (WiFi.status() != WL_CONNECTED)
     {
         for (auto &credential : credentials)
@@ -34,31 +53,18 @@ void init_wifi_task(void *params)
             {
                 if (WiFi.status() == WL_CONNECTED)
                 {
-                    connection_ready = true;
                     break;
                 }
 
                 delay(500);
             }
         }
-        if (WiFi.status() != WL_CONNECTED)
+        if (!connection_ready)
         {
             log_w("Restarting because of no wifi connection");
             delay(2000);
             ESP.restart();
         }
-    }
-
-    if (!init_mdns_done)
-    {
-        init_mdns_done = MDNS.begin("eisenbahn");
-    }
-
-    if (!init_mdns_done)
-    {
-        log_d("Error setting up MDNS responder!");
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-        ESP.restart();
     }
 
     log_d("Wifi task init finished");

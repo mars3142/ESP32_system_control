@@ -4,7 +4,6 @@
 #include <AccelStepper.h>
 
 #include "connectivity.h"
-#include "rgb.h"
 #include "server.h"
 #include "wled.h"
 
@@ -27,32 +26,34 @@ void setup()
     log_d("Free PSRAM: %d", ESP.getFreePsram());
   }
 
-  xTaskCreate(
-      init_wifi_task, /* Task function. */
-      "WiFi",         /* String with name of task. */
-      10000,          /* Stack size in bytes. */
-      NULL,           /* Parameter passed as input of the task */
-      1,              /* Priority of the task. */
-      NULL            /* Task handle. */
-  );
-
-  xTaskCreate(
-      init_server_task, /* Task function. */
-      "Server",         /* String with name of task. */
-      10000,            /* Stack size in bytes. */
-      NULL,             /* Parameter passed as input of the task */
-      1,                /* Priority of the task. */
-      NULL              /* Task handle. */
+  xTaskCreatePinnedToCore(
+      init_wifi_task, // Task function.
+      "WiFi",         // String with name of task.
+      5000,           // Stack size in bytes.
+      NULL,           // Parameter passed as input of the task
+      1,              // Priority of the task.
+      NULL,           // Task handle.
+      APP_CPU_NUM     // CPU Core
   );
 
   xTaskCreatePinnedToCore(
-      show_wled_task, /* Task function. */
-      "WLED",         /* String with name of task. */
-      10000,          /* Stack size in bytes. */
-      NULL,           /* Parameter passed as input of the task */
-      1,              /* Priority of the task. */
-      NULL,           /* Task handle. */
-      APP_CPU_NUM     /* CPU Core */
+      init_server_task, // Task function.
+      "Server",         // String with name of task.
+      10000,            // Stack size in bytes.
+      NULL,             // Parameter passed as input of the task
+      1,                // Priority of the task.
+      NULL,             // Task handle.
+      APP_CPU_NUM       // CPU Core
+  );
+
+  xTaskCreatePinnedToCore(
+      show_wled_task, // Task function.
+      "WLED",         // String with name of task.
+      10000,          // Stack size in bytes.
+      NULL,           // Parameter passed as input of the task
+      1,              // Priority of the task.
+      NULL,           // Task handle.
+      APP_CPU_NUM     // CPU Core
   );
 
   stepper.setMaxSpeed(1000);

@@ -1,28 +1,27 @@
-#include "settings.h"
+#include "state.h"
 
-#include <Adafruit_NeoPixel.h>
+#include <ArduinoJson.h>
+#include <FastLED.h>
 
-const auto pixel = Adafruit_NeoPixel();
-const auto day_color = pixel.Color(127, 127, 127);
-const auto night_color = pixel.Color(0, 0, 255);
+const auto day_color = CRGB(127, 127, 127);
+const auto night_color = CRGB(0, 0, 255);
 
 const char *get_values()
 {
-    return "{\"state\":\"day\", \"colorDay\":\"#00FF00\", \"brightnessDay\":10, \"colorNight\":\"#0000FF\", \"brightnessNight\":50, \"duration\":60}";
+    char *result = new char[1024];
+    DynamicJsonDocument doc(1024);
+
+    doc["state"] = "day";
+    doc["colorDay"] = "#00FF00";
+    doc["colorNight"] = "#0000FF";
+    doc["brightness"] = get_brightness();
+    doc["delay"] = 2;
+
+    serializeJson(doc, result, 1024);
+    return result;
 }
 
-uint8_t get_brightness(int step = 0)
+uint8_t get_brightness()
 {
-    if (step == 0)
-        return 10;
-
-    return 50;
-}
-
-uint32_t get_color(int step = 0)
-{
-    if (step == 0)
-        return day_color;
-
-    return night_color;
+    return 192;
 }
