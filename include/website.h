@@ -67,6 +67,18 @@ const char index_html[] PROGMEM = R"(
                 <h3 class="title is-3">Allgemein</h3>
 
                 <div class="field">
+                  <label class="label">LED Count</label>
+                  <div class="control">
+                    <input
+                      class="input"
+                      type="number"
+                      name="ledCount"
+                      id="ledCount"
+                      value="0"
+                    />
+                  </div>
+                </div>
+                <div class="field">
                   <label class="label"
                     >Helligkeit (<output id="brightnessValue"></output>)</label
                   >
@@ -212,6 +224,7 @@ const char index_html[] PROGMEM = R"(
             const data = JSON.parse(event.data);
             setVal("colorDay", data.colorDay || "#001122");
             setVal("colorNight", data.colorNight || "#334455");
+            setVal("ledCount", data.ledCount || 500);
             setVal("brightness", data.brightness || 192);
             setVal("brightnessValue", data.brightness || 192);
             setVal("delay", data.delay || 5);
@@ -249,10 +262,11 @@ const char index_html[] PROGMEM = R"(
 
       function sendData() {
         const data = {
+          ledCount: parseInt(getVal("ledCount")),
           colorDay: getVal("colorDay"),
           colorNight: getVal("colorNight"),
-          brightness: getVal("brightness"),
-          delay: getVal("delay"),
+          brightness: parseInt(getVal("brightness")),
+          delay: parseInt(getVal("delay")),
           state: dnState,
         };
         console.log("Sending data: " + JSON.stringify(data));

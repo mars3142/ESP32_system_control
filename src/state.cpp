@@ -16,6 +16,7 @@ const char *get_values()
     doc["colorNight"] = "#0000FF";
     doc["brightness"] = get_brightness();
     doc["delay"] = 2;
+    doc["ledCount"] = 450;
 
     serializeJson(doc, result, 1024);
     return result;
