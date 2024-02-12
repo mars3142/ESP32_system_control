@@ -1,7 +1,25 @@
 #pragma once
 
-#include <Arduino.h>
+#include <FastLED.h>
 
-const char *get_values();
+const char *getValues();
 
-uint8_t get_brightness();
+void setBrightness(uint8_t brightness);
+
+uint8_t getBrightness();
+
+void setLedCount(uint32_t led_count);
+
+uint32_t getLedCount();
+
+void setDelay(uint32_t delay);
+
+uint32_t getDelay(int multiplier = 1);
+
+void setDayColor(String color);
+
+CRGB get_day_color();
+
+void setNightColor(String color);
+
+CRGB getNightColor();

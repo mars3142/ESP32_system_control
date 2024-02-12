@@ -27,33 +27,33 @@ void setup()
   }
 
   xTaskCreatePinnedToCore(
-      init_wifi_task, // Task function.
-      "WiFi",         // String with name of task.
-      5000,           // Stack size in bytes.
-      NULL,           // Parameter passed as input of the task
-      1,              // Priority of the task.
-      NULL,           // Task handle.
-      APP_CPU_NUM     // CPU Core
+      initWifiTask, // Task function.
+      "WiFi",       // String with name of task.
+      5000,         // Stack size in bytes.
+      NULL,         // Parameter passed as input of the task
+      1,            // Priority of the task.
+      NULL,         // Task handle.
+      APP_CPU_NUM   // CPU Core
   );
 
   xTaskCreatePinnedToCore(
-      init_server_task, // Task function.
-      "Server",         // String with name of task.
-      10000,            // Stack size in bytes.
-      NULL,             // Parameter passed as input of the task
-      1,                // Priority of the task.
-      NULL,             // Task handle.
-      APP_CPU_NUM       // CPU Core
-  );
-
-  xTaskCreatePinnedToCore(
-      show_wled_task, // Task function.
-      "WLED",         // String with name of task.
+      initServerTask, // Task function.
+      "Server",       // String with name of task.
       10000,          // Stack size in bytes.
       NULL,           // Parameter passed as input of the task
       1,              // Priority of the task.
       NULL,           // Task handle.
       APP_CPU_NUM     // CPU Core
+  );
+
+  xTaskCreatePinnedToCore(
+      showWledTask, // Task function.
+      "WLED",       // String with name of task.
+      10000,        // Stack size in bytes.
+      NULL,         // Parameter passed as input of the task
+      1,            // Priority of the task.
+      NULL,         // Task handle.
+      APP_CPU_NUM   // CPU Core
   );
 
   stepper.setMaxSpeed(1000);

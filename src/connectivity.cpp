@@ -27,7 +27,7 @@ void connected(WiFiEvent_t event, WiFiEventInfo_t info)
     }
 }
 
-void init_wifi_task(void *params)
+void initWifiTask(void *params)
 {
     log_d("Starting init wifi task");
 

@@ -1,8 +1,3 @@
-#pragma once
-
-#include <Arduino.h>
-
-const char index_html[] PROGMEM = R"(
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -80,7 +75,7 @@ const char index_html[] PROGMEM = R"(
                 </div>
                 <div class="field">
                   <label class="label"
-                    >Helligkeit (<output id="brightnessValue"></output>)</label
+                    >Helligkeit (<output id="brightnessValue"></output>%)</label
                   >
                   <div class="control">
                     <input
@@ -190,7 +185,7 @@ const char index_html[] PROGMEM = R"(
       const brightnessSlider = document.querySelector("#brightness");
       brightness.textContent = brightnessSlider.value;
       brightnessSlider.addEventListener("input", (event) => {
-        brightness.textContent = event.target.value;
+        brightness.textContent = parseInt((event.target.value / 255) * 100);
       });
 
       const delay = document.querySelector("#delayValue");
@@ -226,7 +221,10 @@ const char index_html[] PROGMEM = R"(
             setVal("colorNight", data.colorNight || "#334455");
             setVal("ledCount", data.ledCount || 500);
             setVal("brightness", data.brightness || 192);
-            setVal("brightnessValue", data.brightness || 192);
+            setVal(
+              "brightnessValue",
+              parseInt(((data.brightness || 192) / 255) * 100)
+            );
             setVal("delay", data.delay || 5);
             setVal("delayValue", data.delay || 5);
             setDayNight(data.state || "day");
@@ -443,4 +441,3 @@ const char index_html[] PROGMEM = R"(
     </script>
   </body>
 </html>
-    )";

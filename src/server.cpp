@@ -5,27 +5,26 @@
 #include <SPIFFS.h>
 
 #include "state.h"
-#include "website.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/state");
 
-void on_get_root(AsyncWebServerRequest *request)
+void onGetRoot(AsyncWebServerRequest *request)
 {
-    request->send(200, "text/html", index_html);
+    request->send(SPIFFS, "/index.html", "text/html");
 }
 
-void on_post_state(AsyncWebServerRequest *request)
-{
-    request->send(200, "application/json", "{'status':true}");
-}
-
-void on_post_config(AsyncWebServerRequest *request)
+void onPostState(AsyncWebServerRequest *request)
 {
     request->send(200, "application/json", "{'status':true}");
 }
 
-void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+void onPostConfig(AsyncWebServerRequest *request)
+{
+    request->send(200, "application/json", "{'status':true}");
+}
+
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
     auto json = DynamicJsonDocument(1024);
     auto err = deserializeJson(json, data);
@@ -34,6 +33,9 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
         log_e("deserializeJson() failed with code %s", err.c_str());
         return;
     }
+
+    auto auth = json["auth"].as<String>();
+    auto command = json["command"].as<String>();
 
     switch (type)
     {
@@ -46,7 +48,14 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
         break;
 
     case WS_EVT_DATA:
-        server->textAll(get_values());
+        if (auth != "eisenbahn")
+        {
+            log_e("Wrong auth");
+            server->text(client->id(), "{\"error\":\"Wrong auth\"}");
+            return;
+        }
+        log_d("ws client #%u command: %s", client->id(), command.c_str());
+        server->textAll(getValues());
         break;
 
     case WS_EVT_PONG:
@@ -55,7 +64,7 @@ void on_ws_event(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventT
     }
 }
 
-void init_server_task(void *param)
+void initServerTask(void *param)
 {
     log_d("Starting server init task");
 
@@ -63,13 +72,13 @@ void init_server_task(void *param)
 
     AsyncElegantOTA.begin(&server); // Start ElegantOTA
 
-    ws.onEvent(on_ws_event);
-
-    server.on("/", HTTP_GET, on_get_root);
-    server.on("/state", HTTP_POST, on_post_state);
-    server.on("/config", HTTP_POST, on_post_config);
-    server.serveStatic("/", SPIFFS, "/");
+    ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+
+    server.on("/", HTTP_GET, onGetRoot);
+    server.on("/state", HTTP_POST, onPostState);
+    server.on("/config", HTTP_POST, onPostConfig);
+    server.serveStatic("/", SPIFFS, "/");
     server.begin();
 
     log_d("Server task init finished");
