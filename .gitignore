@@ -3,5 +3,7 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-src/credentials.h
 .DS_Store
+**/credentials.h
+pcb/**/*-backups
+src_

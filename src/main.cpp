@@ -1,68 +1,87 @@
 #include <Arduino.h>
 
-#include <esp32-hal-log.h>
-#include <AccelStepper.h>
+#include <vector>
 
-#include "connectivity.h"
-#include "server.h"
-#include "wled.h"
+#include <U8g2lib.h>
+#include <FastLED.h>
+#include <OneButton.h>
 
-// Motor Driver
-#define step_pin 25
-#define dir_pin 26
+#include "ui/main_menu.h"
 
-AccelStepper stepper(AccelStepper::FULL2WIRE, step_pin, dir_pin);
+// U8G2_SSD1309_128X64_NONAME2_1_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
+// U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
+
+Widget *widget = new MainMenu(&display);
+
+const uint8_t pins[] = {PIN_DOWN, PIN_UP, PIN_LEFT, PIN_RIGHT, PIN_SELECT, PIN_BACK};
+std::vector<OneButton> buttons;
+
+unsigned long lastDeltaTime = 0;
+
+void onMenuItemClicked(int id)
+{
+  /// TBD
+}
+
+void onMenuItemLongPressed(int id)
+{
+}
+
+void onMenuItemReleased(int id)
+{
+}
+
+void setScreen(Widget *screen)
+{
+  if (screen != nullptr)
+  {
+    if (widget != nullptr && widget != screen)
+    {
+      delete widget;
+    }
+
+    widget = screen;
+  }
+}
+
+void onButtonClicked(void *payload)
+{
+  uint8_t *pin = (uint8_t *)payload;
+  widget->onButtonClicked(*pin);
+}
+
+void setupButtons()
+{
+  for (auto pin : pins)
+  {
+    OneButton button(pin);
+    button.attachClick(onButtonClicked, new uint8_t(pin));
+    buttons.push_back(button);
+  }
+}
 
 void setup()
 {
   Serial.begin(115200);
 
-  log_d("Total heap: %d", ESP.getHeapSize());
-  log_d("Free heap: %d", ESP.getFreeHeap());
+  display.setI2CAddress(0x78); // 0x3c * 2
+  display.begin();             // start the u8g2 library
 
-  if (psramInit())
-  {
-    log_d("Total PSRAM: %d", ESP.getPsramSize());
-    log_d("Free PSRAM: %d", ESP.getFreePsram());
-  }
-
-  xTaskCreatePinnedToCore(
-      initWifiTask, // Task function.
-      "WiFi",       // String with name of task.
-      5000,         // Stack size in bytes.
-      NULL,         // Parameter passed as input of the task
-      1,            // Priority of the task.
-      NULL,         // Task handle.
-      APP_CPU_NUM   // CPU Core
-  );
-
-  xTaskCreatePinnedToCore(
-      initServerTask, // Task function.
-      "Server",       // String with name of task.
-      10000,          // Stack size in bytes.
-      NULL,           // Parameter passed as input of the task
-      1,              // Priority of the task.
-      NULL,           // Task handle.
-      APP_CPU_NUM     // CPU Core
-  );
-
-  xTaskCreatePinnedToCore(
-      showWledTask, // Task function.
-      "WLED",       // String with name of task.
-      10000,        // Stack size in bytes.
-      NULL,         // Parameter passed as input of the task
-      1,            // Priority of the task.
-      NULL,         // Task handle.
-      APP_CPU_NUM   // CPU Core
-  );
-
-  stepper.setMaxSpeed(1000);
-  stepper.setAcceleration(50);
-  stepper.setSpeed(200);
-  stepper.moveTo(200);
+  setupButtons();
 }
 
 void loop()
 {
-  /// nothing to do here
+  unsigned long deltaTime = millis() - lastDeltaTime;
+  lastDeltaTime = deltaTime;
+
+  for (auto &button : buttons)
+  {
+    button.tick();
+  }
+
+  display.clearBuffer();
+  widget->render(deltaTime);
+  display.sendBuffer();
 }
