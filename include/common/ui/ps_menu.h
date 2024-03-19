@@ -1,21 +1,22 @@
 #pragma once
 
+#include <vector>
+
 #include "common/ui/widget.h"
 #include "common/menu_callback.h"
 #include "data/menu_item.h"
 
-#include <vector>
-#include <U8G2lib.h>
-
-typedef void (*MenuCallback)(int id);
+typedef void (*MenuCallback)(uint8_t id);
 
 class PSMenu : virtual public Widget
 {
 public:
-    PSMenu(U8G2 *display);
+    PSMenu();
     void render(unsigned long dt) override;
     void onButtonClicked(uint8_t button) override;
-    void addItem(const std::string &text, MenuCallback callback);
+    void addText(const std::string &text, MenuCallback callback);
+    void addSwitch(const std::string &text, std::string &value, MenuCallback callback);
+    void addNumber(const std::string &text, std::string &value, MenuCallback callback);
 
 private:
     void pressed_down();
@@ -28,7 +29,8 @@ private:
     void drawScrollBar(unsigned long dt);
     void drawSelectionBox(unsigned long dt);
 
-    U8G2 *m_display;
-    uint8_t m_selected_item = 0;
+    void renderWidget(const uint8_t type, const uint8_t *font, const int x, const int y, const char *text);
+
+    int8_t m_selected_item = -1;
     std::vector<MenuItem> m_items;
 };
