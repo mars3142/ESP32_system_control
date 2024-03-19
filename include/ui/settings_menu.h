@@ -2,7 +2,7 @@
 
 #include "common/ui/ps_menu.h"
 
-#include <U8G2lib.h>
+#include <U8g2lib.h>
 
 class SettingsMenu : public PSMenu
 {
