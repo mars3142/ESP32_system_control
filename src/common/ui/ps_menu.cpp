@@ -1,45 +1,63 @@
 #include "common/ui/ps_menu.h"
 
+#include "display.h"
 #include "common/icons.h"
 #include "common/menu_callback.h"
 #include "common/settings.h"
 #include "common/ui/scrollbar.h"
 
-PSMenu::PSMenu(U8G2 *display) : m_display(display)
+PSMenu::PSMenu()
 {
 }
 
 void PSMenu::render(unsigned long dt)
 {
+    if (m_selected_item < 0)
+    {
+        pressed_down();
+    }
+
     Settings settings;
     u_int8_t i = 1;
-    m_display->setColorIndex(settings.getBackgroundColor());
-    m_display->drawBox(0, 0, m_display->getDisplayWidth(), m_display->getDisplayHeight());
+    auto display = getDisplay();
+    display->setColorIndex(settings.getBackgroundColor());
+    display->drawBox(0, 0, display->getDisplayWidth(), display->getDisplayHeight());
 
-    m_display->setColorIndex(settings.getForegroundColor());
+    display->setColorIndex(settings.getForegroundColor());
 
     drawScrollBar(dt);
     drawSelectionBox(dt);
 
-    // auto icon = bitmap_led_1;
-
     int x = 4 + 16 + 3; // sure?
-    m_display->setFont(u8g2_font_helvB08_tr);
-    m_display->drawStr(x, m_display->getDisplayHeight() / 2 + 3, m_items.at(m_selected_item).getText()->c_str());
-    // m_display->drawXBMP(6, m_display->getDisplayHeight() / 2 - 8, 14, 14, icon);
+    auto widget = m_items.at(m_selected_item);
+    renderWidget(widget.getType(), u8g2_font_helvB08_tr, x, display->getDisplayHeight() / 2 + 3, widget.getText()->c_str());
 
-    m_display->setFont(u8g2_font_haxrcorp4089_tr);
     if (m_selected_item > 0)
     {
-        m_display->drawStr(x, 14, m_items.at(m_selected_item - 1).getText()->c_str());
-        // m_display->drawXBMP(6, 4, 14, 14, icon);
+        auto widget = m_items.at(m_selected_item - 1);
+        renderWidget(widget.getType(), u8g2_font_haxrcorp4089_tr, x, 14, widget.getText()->c_str());
     }
     if (m_selected_item < m_items.size() - 1)
     {
-        m_display->drawStr(x, m_display->getDisplayHeight() - 10, m_items.at(m_selected_item + 1).getText()->c_str());
-        // m_display->drawXBMP(6, m_display->getDisplayHeight() - 19, 14, 14, icon);
+        auto widget = m_items.at(m_selected_item + 1);
+        renderWidget(widget.getType(), u8g2_font_haxrcorp4089_tr, x, display->getDisplayHeight() - 10, widget.getText()->c_str());
     }
 };
+
+void PSMenu::renderWidget(const uint8_t type, const uint8_t *font, const int x, const int y, const char *text)
+{
+    auto display = getDisplay();
+    switch (type)
+    {
+    case 0: // text
+        display->setFont(font);
+        display->drawStr(x, y, text);
+        break;
+
+    default:
+        break;
+    }
+}
 
 void PSMenu::onButtonClicked(uint8_t button)
 {
@@ -84,10 +102,15 @@ void PSMenu::pressed_down()
     {
         m_selected_item++;
     }
+    if (!m_items.at(m_selected_item).hasCallback())
+    {
+        pressed_down();
+    }
 }
 
 void PSMenu::pressed_up()
 {
+    /*
     if (m_selected_item == 0)
     {
         m_selected_item = m_items.size() - 1;
@@ -96,6 +119,8 @@ void PSMenu::pressed_up()
     {
         m_selected_item--;
     }
+    */
+    m_items.at(m_selected_item).callback(m_selected_item);
 }
 
 void PSMenu::pressed_left()
@@ -110,7 +135,7 @@ void PSMenu::pressed_right()
 
 void PSMenu::pressed_select()
 {
-    ///
+    m_items.at(m_selected_item).callback(m_selected_item);
 }
 
 void PSMenu::pressed_back()
@@ -118,24 +143,36 @@ void PSMenu::pressed_back()
     ///
 }
 
-void PSMenu::addItem(const std::string &text, MenuCallback callback)
+void PSMenu::addText(const std::string &text, MenuCallback callback)
 {
-    m_items.push_back(MenuItem(text, callback));
+    m_items.push_back(MenuItem(0, text, callback));
+}
+
+void PSMenu::addSwitch(const std ::string &text, std::string &value, MenuCallback callback)
+{
+    m_items.push_back(MenuItem(1, text, value, callback));
+}
+
+void PSMenu::addNumber(const std::string &text, std::string &value, MenuCallback callback)
+{
+    m_items.push_back(MenuItem(2, text, value, callback));
 }
 
 void PSMenu::drawScrollBar(unsigned long dt)
 {
-    ScrollBar scrollBar(m_display, m_display->getDisplayWidth() - 3, 3, 1, m_display->getDisplayHeight() - 6);
+    auto display = getDisplay();
+    ScrollBar scrollBar(display->getDisplayWidth() - 3, 3, 1, display->getDisplayHeight() - 6);
     scrollBar.update(m_selected_item, m_items.size());
     scrollBar.render(dt);
 }
 
 void PSMenu::drawSelectionBox(unsigned long dt)
 {
+    auto display = getDisplay();
     int rightPadding = 8;
-    m_display->drawRFrame(2, m_display->getDisplayHeight() / 3, m_display->getDisplayWidth() - rightPadding, m_display->getDisplayHeight() / 3, 3);
-    int y = (m_display->getDisplayHeight() / 3) * 2 - 2;
-    m_display->drawLine(4, y, m_display->getDisplayWidth() - rightPadding, y);
-    int x = m_display->getDisplayWidth() - rightPadding;
-    m_display->drawLine(x, y - m_display->getDisplayHeight() / 3 + 3, x, y - 1);
+    display->drawRFrame(2, display->getDisplayHeight() / 3, display->getDisplayWidth() - rightPadding, display->getDisplayHeight() / 3, 3);
+    int y = (display->getDisplayHeight() / 3) * 2 - 2;
+    display->drawLine(4, y, display->getDisplayWidth() - rightPadding, y);
+    int x = display->getDisplayWidth() - rightPadding;
+    display->drawLine(x, y - display->getDisplayHeight() / 3 + 3, x, y - 1);
 }

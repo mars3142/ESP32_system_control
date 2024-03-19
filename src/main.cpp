@@ -2,17 +2,13 @@
 
 #include <vector>
 
-#include <U8g2lib.h>
 #include <FastLED.h>
 #include <OneButton.h>
 
+#include "display.h"
 #include "ui/main_menu.h"
 
-// U8G2_SSD1309_128X64_NONAME2_1_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
-U8G2_SH1106_128X64_NONAME_F_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
-// U8G2_SSD1306_128X64_NONAME_1_HW_I2C display(U8G2_R0, /* reset */ U8X8_PIN_NONE, PIN_SCL, PIN_SDA);
-
-Widget *widget = new MainMenu(&display);
+Widget *widget = new MainMenu();
 
 const uint8_t pins[] = {PIN_DOWN, PIN_UP, PIN_LEFT, PIN_RIGHT, PIN_SELECT, PIN_BACK};
 std::vector<OneButton> buttons;
@@ -65,8 +61,8 @@ void setup()
 {
   Serial.begin(115200);
 
-  display.setI2CAddress(0x78); // 0x3c * 2
-  display.begin();             // start the u8g2 library
+  getDisplay()->setI2CAddress(0x78); // 0x3c * 2
+  getDisplay()->begin();             // start the u8g2 library
 
   setupButtons();
 }
@@ -81,7 +77,7 @@ void loop()
     button.tick();
   }
 
-  display.clearBuffer();
+  getDisplay()->clearBuffer();
   widget->render(deltaTime);
-  display.sendBuffer();
+  getDisplay()->sendBuffer();
 }

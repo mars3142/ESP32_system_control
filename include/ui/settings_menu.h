@@ -1,12 +1,11 @@
 #pragma once
 
-#include "common/ui/widget.h"
+#include "common/ui/ps_menu.h"
 
-class SettingsMenu : protected Widget
+#include <U8G2lib.h>
+
+class SettingsMenu : public PSMenu
 {
-private:
-    /* data */
 public:
-    SettingsMenu(/* args */);
-    ~SettingsMenu();
+    SettingsMenu();
 };

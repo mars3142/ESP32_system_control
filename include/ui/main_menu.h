@@ -9,5 +9,8 @@
 class MainMenu : public PSMenu
 {
 public:
-    MainMenu(U8G2 *display);
+    MainMenu();
+
+private:
+    static void onSelect(uint8_t id);
 };

@@ -1,9 +1,13 @@
 #include "ui/settings_menu.h"
 
-SettingsMenu::SettingsMenu(/* args */)
+#include "display.h"
+
+void demo(uint8_t id)
 {
+    ///
 }
 
-SettingsMenu::~SettingsMenu()
+SettingsMenu::SettingsMenu()
 {
+    addText("OTA Einspielen", demo);
 }
