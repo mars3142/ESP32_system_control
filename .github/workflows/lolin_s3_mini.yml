@@ -24,6 +24,9 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
+      - name: Static code analysis
+        run: pio check
+
       - name: Build bare metal
         run: pio run
 
