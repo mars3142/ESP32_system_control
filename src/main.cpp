@@ -61,8 +61,10 @@ void setup()
 {
   Serial.begin(115200);
 
-  getDisplay()->setI2CAddress(0x78); // 0x3c * 2
-  getDisplay()->begin();             // start the u8g2 library
+  // 0x3c * 2
+  getDisplay()->setI2CAddress(0x78);
+  // start the u8g2 library
+  getDisplay()->begin();
 
   setupButtons();
 }

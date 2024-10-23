@@ -1,6 +1,6 @@
 #include "data/menu_item.h"
 
-MenuItem::MenuItem(const uint8_t type, const std::string &text, void (*callback)(uint8_t id)) : m_type(type), m_text(text), m_value(""), m_callback(callback)
+MenuItem::MenuItem(const uint8_t type, const std::string &text, void (*callback)(uint8_t id)) : m_type(type), m_text(text), m_callback(callback)
 {
 }
 

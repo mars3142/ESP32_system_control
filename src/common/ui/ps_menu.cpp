@@ -102,15 +102,10 @@ void PSMenu::pressed_down()
     {
         m_selected_item++;
     }
-    if (!m_items.at(m_selected_item).hasCallback())
-    {
-        pressed_down();
-    }
 }
 
 void PSMenu::pressed_up()
 {
-    /*
     if (m_selected_item == 0)
     {
         m_selected_item = m_items.size() - 1;
@@ -119,8 +114,6 @@ void PSMenu::pressed_up()
     {
         m_selected_item--;
     }
-    */
-    m_items.at(m_selected_item).callback(m_selected_item);
 }
 
 void PSMenu::pressed_left()
