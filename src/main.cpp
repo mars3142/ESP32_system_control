@@ -1,43 +1,40 @@
 #include <Arduino.h>
 
+#include <memory>
 #include <vector>
 
-#include <FastLED.h>
 #include <OneButton.h>
 
 #include "display.h"
-#include "ui/main_menu.h"
+#include "ui/splash_screen.h"
 
-Widget *widget = new MainMenu();
+std::shared_ptr<Widget> widget;
+std::vector<std::shared_ptr<Widget>> history;
 
 const uint8_t pins[] = {PIN_DOWN, PIN_UP, PIN_LEFT, PIN_RIGHT, PIN_SELECT, PIN_BACK};
 std::vector<OneButton> buttons;
 
 unsigned long lastDeltaTime = 0;
 
-void onMenuItemClicked(int id)
+void popScreen()
 {
-  /// TBD
+  log_d("History count: %i", history.size());
+
+  if (history.size() >= 2)
+  {
+    history.pop_back();
+    widget = history.back();
+  }
 }
 
-void onMenuItemLongPressed(int id)
+void pushScreen(std::shared_ptr<Widget> screen)
 {
-}
+  log_d();
 
-void onMenuItemReleased(int id)
-{
-}
-
-void setScreen(Widget *screen)
-{
   if (screen != nullptr)
   {
-    if (widget != nullptr && widget != screen)
-    {
-      delete widget;
-    }
-
     widget = screen;
+    history.push_back(widget);
   }
 }
 
@@ -67,6 +64,7 @@ void setup()
   getDisplay()->begin();
 
   setupButtons();
+  widget = std::make_shared<SplashScreen>();
 }
 
 void loop()

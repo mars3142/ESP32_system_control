@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+
 #include "common/ui/widget.h"
 
-void setScreen(Widget *screen);
+void pushScreen(std::shared_ptr<Widget> screen);
+void popScreen();

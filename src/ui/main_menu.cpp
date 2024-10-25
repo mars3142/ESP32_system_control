@@ -3,8 +3,6 @@
 #include "ui/light_menu.h"
 #include "ui/settings_menu.h"
 
-#include <FastLED.h>
-
 MainMenu::MainMenu() : PSMenu()
 {
     addText("Lichtsteuerung", MainMenu::onSelect);
@@ -13,15 +11,15 @@ MainMenu::MainMenu() : PSMenu()
 
 void MainMenu::onSelect(uint8_t id)
 {
-    Widget *widget = nullptr;
+    std::shared_ptr<Widget> widget;
     switch (id)
     {
     case 0:
-        widget = new LightMenu();
+        widget = std::make_shared<LightMenu>();
         break;
     case 1:
-        widget = new SettingsMenu();
+        widget = std::make_shared<SettingsMenu>();
         break;
     }
-    setScreen(widget);
+    pushScreen(widget);
 }

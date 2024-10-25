@@ -11,7 +11,6 @@ typedef void (*MenuCallback)(uint8_t id);
 class PSMenu : virtual public Widget
 {
 public:
-    PSMenu();
     void render(unsigned long dt) override;
     void onButtonClicked(uint8_t button) override;
     void addText(const std::string &text, MenuCallback callback);
@@ -31,6 +30,6 @@ private:
 
     void renderWidget(const uint8_t type, const uint8_t *font, const int x, const int y, const char *text);
 
-    int8_t m_selected_item = -1;
+    int8_t m_selected_item = 0;
     std::vector<MenuItem> m_items;
 };

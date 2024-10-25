@@ -7,6 +7,6 @@ void demoL(uint8_t id)
 
 LightMenu::LightMenu()
 {
-    addText("Umschalten", nullptr);
+    addText("Tag/Nacht", nullptr);
     addText("LED Einstellungen", demoL);
 }

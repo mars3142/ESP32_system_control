@@ -6,10 +6,6 @@
 #include "common/settings.h"
 #include "common/ui/scrollbar.h"
 
-PSMenu::PSMenu()
-{
-}
-
 void PSMenu::render(unsigned long dt)
 {
     if (m_selected_item < 0)
@@ -30,17 +26,17 @@ void PSMenu::render(unsigned long dt)
 
     int x = 4 + 16 + 3; // sure?
     auto widget = m_items.at(m_selected_item);
-    renderWidget(widget.getType(), u8g2_font_helvB08_tr, x, display->getDisplayHeight() / 2 + 3, widget.getText()->c_str());
+    renderWidget(widget.getType(), settings.getSecondaryFont(), x, display->getDisplayHeight() / 2 + 3, widget.getText()->c_str());
 
     if (m_selected_item > 0)
     {
         auto widget = m_items.at(m_selected_item - 1);
-        renderWidget(widget.getType(), u8g2_font_haxrcorp4089_tr, x, 14, widget.getText()->c_str());
+        renderWidget(widget.getType(), settings.getPrimaryFont(), x, 14, widget.getText()->c_str());
     }
     if (m_selected_item < m_items.size() - 1)
     {
         auto widget = m_items.at(m_selected_item + 1);
-        renderWidget(widget.getType(), u8g2_font_haxrcorp4089_tr, x, display->getDisplayHeight() - 10, widget.getText()->c_str());
+        renderWidget(widget.getType(), settings.getPrimaryFont(), x, display->getDisplayHeight() - 10, widget.getText()->c_str());
     }
 };
 
@@ -94,6 +90,8 @@ void PSMenu::onButtonClicked(uint8_t button)
 
 void PSMenu::pressed_down()
 {
+    log_d();
+
     if (m_selected_item == m_items.size() - 1)
     {
         m_selected_item = 0;
@@ -106,6 +104,8 @@ void PSMenu::pressed_down()
 
 void PSMenu::pressed_up()
 {
+    log_d();
+
     if (m_selected_item == 0)
     {
         m_selected_item = m_items.size() - 1;
@@ -118,22 +118,26 @@ void PSMenu::pressed_up()
 
 void PSMenu::pressed_left()
 {
-    ///
+    log_d();
 }
 
 void PSMenu::pressed_right()
 {
-    ///
+    log_d();
 }
 
 void PSMenu::pressed_select()
 {
+    log_d();
+
     m_items.at(m_selected_item).callback(m_selected_item);
 }
 
 void PSMenu::pressed_back()
 {
-    ///
+    log_d();
+
+    popScreen();
 }
 
 void PSMenu::addText(const std::string &text, MenuCallback callback)
